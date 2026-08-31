@@ -1,81 +1,83 @@
 import Appointment from '../models/Appointment.js';
 import BlockedDate from '../models/BlockedDate.js';
-import sendEmail from '../utils/sendEmail.js';
-import { appointmentStatusTemplate } from '../utils/emailTemplates.js';
 
-// Get all appointments
-export const getAllAppointments = async (req, res) => {
+export const getDashboardStats = async (req, res) => {
   try {
-    const appointments = await Appointment.find({}).sort({ createdAt: -1 });
-    res.json(appointments);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const totalAppointments = await Appointment.countDocuments();
+    const todaysAppointments = await Appointment.countDocuments({
+      date: { $gte: today, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+    });
+    const pendingAppointments = await Appointment.countDocuments({ status: 'pending' });
+    
+    // We don't track users anymore, return 0
+    res.json({
+      totalAppointments,
+      todaysAppointments,
+      pendingAppointments,
+      totalUsers: 0
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-// Update appointment status
-export const updateAppointmentStatus = async (req, res) => {
-  const { status } = req.body;
+export const getAllAppointments = async (req, res) => {
   try {
+    const appointments = await Appointment.find({}).sort({ date: -1, time: 1 });
+    res.json(appointments);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const updateAppointmentStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
     const appointment = await Appointment.findById(req.params.id);
+
     if (appointment) {
       appointment.status = status;
       const updatedAppointment = await appointment.save();
-      
-      if (status !== 'pending') {
-        const emailSent = await sendEmail({
-          email: updatedAppointment.email,
-          subject: 'Appointment Update',
-          html: appointmentStatusTemplate(updatedAppointment.name, updatedAppointment.date, updatedAppointment.time, status)
-        });
-        if (!emailSent) {
-          console.log(`Failed to send appointment status email to ${updatedAppointment.email}`);
-        }
-      }
-
       res.json(updatedAppointment);
     } else {
       res.status(404).json({ message: 'Appointment not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-// Block a date
 export const blockDate = async (req, res) => {
-  const { date, reason } = req.body;
   try {
-    const isBlocked = await BlockedDate.findOne({ date });
-    if (isBlocked) {
-      return res.status(400).json({ message: 'Date is already blocked' });
-    }
-    const blocked = await BlockedDate.create({ date, reason });
-    res.status(201).json(blocked);
+    const { date, reason } = req.body;
+    const blockedDate = new BlockedDate({ date, reason });
+    await blockedDate.save();
+    res.status(201).json(blockedDate);
   } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Unblock a date
-export const unblockDate = async (req, res) => {
-  try {
-    const blocked = await BlockedDate.findOneAndDelete({ date: req.params.date });
-    if (blocked) {
-      res.json({ message: 'Date unblocked' });
-    } else {
-      res.status(404).json({ message: 'Blocked date not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
 export const getBlockedDates = async (req, res) => {
   try {
-    const blockedDates = await BlockedDate.find({});
+    const blockedDates = await BlockedDate.find({}).sort({ date: 1 });
     res.json(blockedDates);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const unblockDate = async (req, res) => {
+  try {
+    const blockedDate = await BlockedDate.findByIdAndDelete(req.params.id);
+    if (!blockedDate) {
+      return res.status(404).json({ message: 'Blocked date not found' });
+    }
+    res.json({ message: 'Date unblocked' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
   }
 };

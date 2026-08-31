@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Phone, CheckCircle, XCircle } from 'lucide-react';
 import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [error, setError] = useState('');
 
   const fetchAppointments = async () => {
     try {
       const { data } = await api.get('/admin/appointments');
       setAppointments(data);
-    } catch (error) {
-      console.error('Failed to fetch appointments', error);
+    } catch (err) {
+      setError('Failed to fetch appointments');
     } finally {
       setLoading(false);
     }
@@ -23,122 +22,111 @@ const AdminDashboard = () => {
     fetchAppointments();
   }, []);
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusUpdate = async (id, status) => {
     try {
-      await api.patch(`/admin/appointments/${id}/status`, { status: newStatus });
+      await api.put(`/admin/appointments/${id}`, { status });
       fetchAppointments();
-    } catch (error) {
-      console.error('Failed to update status', error);
-      alert('Failed to update status');
+    } catch (err) {
+      setError('Failed to update status');
     }
   };
-
-  const filteredAppointments = appointments.filter(apt => {
-    if (filter === 'all') return true;
-    return apt.status === filter;
-  });
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'confirmed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     }
   };
 
+  if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
+
   return (
-    <div className="py-12 bg-gray-50 min-h-screen">
+    <div className="py-12 bg-background min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8 flex justify-between items-center flex-wrap gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
-            <p className="text-gray-600 mt-1">Manage appointments and clinic schedule</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="bg-primary/10 p-4 rounded-lg text-center min-w-[120px]">
-              <div className="text-2xl font-bold text-primary">{appointments.length}</div>
-              <div className="text-sm text-gray-600">Total</div>
-            </div>
-            <div className="bg-yellow-100 p-4 rounded-lg text-center min-w-[120px]">
-              <div className="text-2xl font-bold text-yellow-600">{appointments.filter(a => a.status === 'pending').length}</div>
-              <div className="text-sm text-gray-600">Pending</div>
-            </div>
-          </div>
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Clinic Dashboard</h2>
+          <p className="text-gray-600 mt-1">Manage all patient appointments.</p>
         </div>
 
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
+          <div className="p-6 md:p-8 border-b border-gray-100">
             <h3 className="text-xl font-bold text-gray-900">All Appointments</h3>
-            <select 
-              value={filter} 
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
           </div>
           
-          {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading appointments...</div>
-          ) : filteredAppointments.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No appointments found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="bg-gray-50 text-gray-600 text-sm">
-                    <th className="p-4 font-semibold">Patient</th>
-                    <th className="p-4 font-semibold">Contact</th>
-                    <th className="p-4 font-semibold">Date & Time</th>
-                    <th className="p-4 font-semibold">Type</th>
-                    <th className="p-4 font-semibold">Status</th>
-                    <th className="p-4 font-semibold text-center">Actions</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="py-4 px-6 font-semibold text-gray-700">Patient</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Date & Time</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700">Status</th>
+                  <th className="py-4 px-6 font-semibold text-gray-700 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {appointments.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="py-8 text-center text-gray-500">No appointments found.</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredAppointments.map((apt) => (
-                    <tr key={apt._id} className="hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="font-medium text-gray-900">{apt.name}</div>
+                ) : (
+                  appointments.map((apt) => (
+                    <tr key={apt._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          <User size={16} className="text-gray-400" />
+                          {apt.patientName}
+                        </div>
+                        <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                          <Phone size={14} className="text-gray-400" />
+                          {apt.patientPhone}
+                        </div>
                       </td>
-                      <td className="p-4">
-                        <div className="text-sm text-gray-900">{apt.phone}</div>
-                        <div className="text-xs text-gray-500">{apt.email}</div>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center text-gray-700 gap-2 mb-1">
+                          <Calendar size={16} className="text-primary" />
+                          {new Date(apt.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center text-gray-500 gap-2 text-sm">
+                          <Clock size={16} className="text-primary" />
+                          {apt.time}
+                        </div>
                       </td>
-                      <td className="p-4">
-                        <div className="text-sm text-gray-900">{new Date(apt.date).toLocaleDateString()}</div>
-                        <div className="text-xs text-gray-500">{apt.time}</div>
-                      </td>
-                      <td className="p-4 text-sm text-gray-700">{apt.consultationType}</td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize inline-block ${getStatusColor(apt.status)}`}>
-                          {apt.status}
+                      <td className="py-4 px-6">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(apt.status)}`}>
+                          {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
                         </span>
                       </td>
-                      <td className="p-4 text-center">
-                        <select 
-                          value={apt.status}
-                          onChange={(e) => handleStatusChange(apt._id, e.target.value)}
-                          className="text-xs border border-gray-300 rounded p-1"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirm</option>
-                          <option value="completed">Complete</option>
-                          <option value="cancelled">Cancel</option>
-                        </select>
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex justify-end gap-2">
+                          {apt.status !== 'confirmed' && (
+                            <button
+                              onClick={() => handleStatusUpdate(apt._id, 'confirmed')}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Confirm Appointment"
+                            >
+                              <CheckCircle size={20} />
+                            </button>
+                          )}
+                          {apt.status !== 'cancelled' && (
+                            <button
+                              onClick={() => handleStatusUpdate(apt._id, 'cancelled')}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Cancel Appointment"
+                            >
+                              <XCircle size={20} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

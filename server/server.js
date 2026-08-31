@@ -2,10 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import chatRoutes from './routes/chatRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 dotenv.config();
@@ -36,10 +34,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/chat', chatRoutes);
 
 app.get('/', (req, res) => {
   res.send('Clinic API is running...');

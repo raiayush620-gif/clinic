@@ -6,13 +6,8 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
 import BookAppointment from './pages/BookAppointment';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Contact from './pages/Contact';
-import AIAssistant from './pages/AIAssistant';
-import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -26,17 +21,7 @@ function App() {
             <Route path="/services" element={<Services />} />
             <Route path="/book-appointment" element={<BookAppointment />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<UserDashboard />} />
-              <Route path="/ai-assistant" element={<AIAssistant />} />
-            </Route>
-
-            <Route element={<ProtectedRoute adminOnly={true} />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            </Route>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Routes>
         </main>
         <Footer />
