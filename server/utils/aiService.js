@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -32,33 +32,44 @@ Important Rules:
 8. Keep your responses concise, helpful, and professional.
 `;
 
-let openai;
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+let genAI;
+if (process.env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 }
 
 export const generateAIResponse = async (messages) => {
-  if (!openai) {
-    throw new Error('OpenAI API key is not configured');
+  if (!genAI) {
+    throw new Error('Gemini API key is not configured');
   }
   
   try {
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages.map(m => ({
-          role: m.role,
-          content: m.content
-        }))
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
+    const model = genAI.getGenerativeModel({ 
+      model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+      systemInstruction: systemPrompt
     });
 
-    return response.choices[0].message.content;
+    // The messages array ends with the latest user message.
+    // We need to separate the history from the latest message.
+    const latestMessage = messages[messages.length - 1].content;
+    const historyMessages = messages.slice(0, -1);
+
+    // Format history for Gemini (roles: 'user' and 'model')
+    const formattedHistory = historyMessages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const chat = model.startChat({
+      history: formattedHistory,
+      generationConfig: {
+        maxOutputTokens: 500,
+        temperature: 0.7,
+      },
+    });
+
+    const result = await chat.sendMessage(latestMessage);
+    return result.response.text();
+    
   } catch (error) {
     console.error('AI Service Error:', error);
     throw new Error('Failed to generate AI response');
