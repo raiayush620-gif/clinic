@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Contact from './pages/Contact';
+import AIAssistant from './pages/AIAssistant';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/ai-assistant" element={<AIAssistant />} />
             </Route>
 
             <Route element={<ProtectedRoute adminOnly={true} />}>

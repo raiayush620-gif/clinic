@@ -34,9 +34,15 @@ const UserDashboard = () => {
   return (
     <div className="py-12 bg-background min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Welcome, {user?.name}</h2>
-          <p className="text-gray-600 mt-1">Manage your appointments and health journey.</p>
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mb-8 flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Welcome, {user?.name}</h2>
+            <p className="text-gray-600 mt-1">Manage your appointments and health journey.</p>
+          </div>
+          <a href="/ai-assistant" className="btn-secondary flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Ask AI Assistant
+          </a>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
