@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #245B45;
+  --color-secondary: #A8BFA8;
+  --color-background: #F7F5EF;
+  --color-accent: #C9A66B;
+  --color-text-dark: #222222;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-dark);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Custom Utilities */
+.btn-primary {
+  @apply bg-primary text-white px-6 py-3 rounded-lg hover:bg-[#1a4332] transition-colors duration-300;
+}
+.btn-secondary {
+  @apply bg-transparent border-2 border-primary text-primary px-6 py-3 rounded-lg hover:bg-primary hover:text-white transition-colors duration-300;
+}
